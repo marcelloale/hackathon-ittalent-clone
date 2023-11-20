@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    networks:
+      - app-network
+    volumes:
+      - mongo-data:/data/db
+      
+  app:
+    image: marcelloale/go-api-mongo:1.0.0
+    container_name: app
+    ports:
+      - 9080:9080
+    networks:
+      - app-network
+    environment:
+      MONGO_DB_HOST: mongodb
+    depends_on:
+      - mongodb
+  
+  linux-client:
+    image: ubuntu
+    container_name: client
+    networks:
+      - app-network
+    depends_on:
+      - app
+    command: >
+      /bin/bash -c "
+      apt-get update && 
+      apt-get install -y curl vim htop &&
+      tail -f /dev/null"
+    volumes:
+      - ./data:/data
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
